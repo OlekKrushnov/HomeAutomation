@@ -838,6 +838,15 @@ body.dark-theme .scene-card-bg {
     border-radius: 24px;
     overflow: hidden;
     transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.camera-card-glass:hover {
+    transform: translateY(-4px);
+}
+
+.camera-card-glass:hover .camera-card-bg {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
 .camera-card-bg {
@@ -865,6 +874,69 @@ body.dark-theme .camera-card-bg {
     z-index: 2;
 }
 
+/* Video Preview */
+.camera-preview {
+    position: relative;
+    height: 180px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+    overflow: hidden;
+}
+
+.camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.camera-card-glass:hover .camera-overlay {
+    opacity: 1;
+}
+
+.play-icon {
+    font-size: 64px !important;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Live Badge */
+.live-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Placeholder for offline cameras */
 .camera-placeholder {
     height: 180px;
     display: flex;
@@ -883,30 +955,98 @@ body.dark-theme .camera-card-bg {
     color: rgba(255, 255, 255, 0.4);
 }
 
-.camera-status {
+.camera-status-text {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
 }
 
+/* Camera Info */
 .camera-info {
-    padding: 20px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .camera-name {
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 8px 0;
+    margin: 0;
 }
 
-.camera-url {
+.camera-status {
     font-size: 0.75rem;
-    color: var(--text-tertiary);
-    font-family: 'Consolas', 'Monaco', monospace;
-    word-break: break-all;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.camera-status.online {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.camera-status.offline {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+/* Fullscreen Modal */
+.camera-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.camera-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 1200px;
+    aspect-ratio: 16/9;
+}
+
+.modal-close {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.fullscreen-video {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background: #000;
 }
 
 .camera-note {

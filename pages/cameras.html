@@ -5,69 +5,173 @@
     </h2>
 
     <div class="camera-grid" id="camera-grid">
-        <!-- Kamera 1: Eingang -->
+        <!-- Kamera 1: Wowza Test Stream -->
+        <div class="camera-card-glass fade-in" onclick="openCameraFullscreen('wowza-demo')">
+            <div class="camera-card-bg"></div>
+            <div class="camera-card-content">
+                <div class="camera-preview">
+                    <video id="camera-wowza-demo" class="camera-video" muted autoplay playsinline></video>
+                    <div class="camera-overlay">
+                        <span class="material-icons play-icon">play_circle</span>
+                    </div>
+                    <span class="live-badge">LIVE</span>
+                </div>
+                <div class="camera-info">
+                    <h3 class="camera-name">🎬 Wowza Demo</h3>
+                    <span class="camera-status online">Stream aktiv</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kamera 2: Eingang (Placeholder) -->
         <div class="camera-card-glass fade-in">
             <div class="camera-card-bg"></div>
             <div class="camera-card-content">
                 <div class="camera-placeholder">
                     <span class="material-icons camera-icon">videocam_off</span>
-                    <p class="camera-status">RTSP Stream</p>
+                    <p class="camera-status-text">Offline</p>
                 </div>
                 <div class="camera-info">
                     <h3 class="camera-name">📹 Eingang</h3>
-                    <span class="camera-url">rtsp://192.168.1.100:554/stream1</span>
+                    <span class="camera-status offline">Nicht verbunden</span>
                 </div>
             </div>
         </div>
 
-        <!-- Kamera 2: Garage -->
+        <!-- Kamera 3: Garage (Placeholder) -->
         <div class="camera-card-glass fade-in">
             <div class="camera-card-bg"></div>
             <div class="camera-card-content">
                 <div class="camera-placeholder">
                     <span class="material-icons camera-icon">videocam_off</span>
-                    <p class="camera-status">RTSP Stream</p>
+                    <p class="camera-status-text">Offline</p>
                 </div>
                 <div class="camera-info">
                     <h3 class="camera-name">🚗 Garage</h3>
-                    <span class="camera-url">rtsp://192.168.1.101:554/stream1</span>
+                    <span class="camera-status offline">Nicht verbunden</span>
                 </div>
             </div>
         </div>
 
-        <!-- Kamera 3: Garten -->
+        <!-- Kamera 4: Garten (Placeholder) -->
         <div class="camera-card-glass fade-in">
             <div class="camera-card-bg"></div>
             <div class="camera-card-content">
                 <div class="camera-placeholder">
                     <span class="material-icons camera-icon">videocam_off</span>
-                    <p class="camera-status">RTSP Stream</p>
+                    <p class="camera-status-text">Offline</p>
                 </div>
                 <div class="camera-info">
                     <h3 class="camera-name">🌳 Garten</h3>
-                    <span class="camera-url">rtsp://192.168.1.102:554/stream1</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kamera 4: Terrasse -->
-        <div class="camera-card-glass fade-in">
-            <div class="camera-card-bg"></div>
-            <div class="camera-card-content">
-                <div class="camera-placeholder">
-                    <span class="material-icons camera-icon">videocam_off</span>
-                    <p class="camera-status">RTSP Stream</p>
-                </div>
-                <div class="camera-info">
-                    <h3 class="camera-name">☀️ Terrasse</h3>
-                    <span class="camera-url">rtsp://192.168.1.103:554/stream1</span>
+                    <span class="camera-status offline">Nicht verbunden</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="camera-note fade-in">
-        <span class="material-icons">info</span>
-        <p>RTSP-Streams werden nach der Backend-Integration verfügbar sein.</p>
+    <!-- Fullscreen Modal -->
+    <div id="camera-fullscreen-modal" class="camera-modal" onclick="closeCameraFullscreen()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeCameraFullscreen()">
+                <span class="material-icons">close</span>
+            </button>
+            <video id="fullscreen-video" class="fullscreen-video" controls autoplay playsinline></video>
+        </div>
     </div>
 </div>
+
+<!-- HLS.js für Stream-Wiedergabe -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+    // Kamera-Konfiguration
+    const cameraStreams = {
+        'wowza-demo': {
+            // HLS URL von Wowza (RTSP wird zu HLS konvertiert)
+            hls: 'https://716f898c7b71.entrypoint.cloud.wowza.com/app-8F9K44lJ/304679fe_stream2/playlist.m3u8',
+            name: 'Wowza Demo Stream'
+        }
+    };
+
+    // Initialisiere alle Kameras beim Laden
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeCameras();
+    });
+
+    function initializeCameras() {
+        Object.keys(cameraStreams).forEach(cameraId => {
+            const video = document.getElementById(`camera-${cameraId}`);
+            if (video) {
+                loadHLSStream(video, cameraStreams[cameraId].hls);
+            }
+        });
+    }
+
+    function loadHLSStream(videoElement, hlsUrl) {
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true
+            });
+            hls.loadSource(hlsUrl);
+            hls.attachMedia(videoElement);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                videoElement.play().catch(e => console.log('Autoplay blocked:', e));
+            });
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                console.log('HLS Error:', data);
+                if (data.fatal) {
+                    showCameraError(videoElement);
+                }
+            });
+        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+            // Native HLS support (Safari)
+            videoElement.src = hlsUrl;
+            videoElement.play().catch(e => console.log('Autoplay blocked:', e));
+        } else {
+            console.log('HLS not supported');
+            showCameraError(videoElement);
+        }
+    }
+
+    function showCameraError(videoElement) {
+        const card = videoElement.closest('.camera-card-content');
+        const preview = card.querySelector('.camera-preview');
+        if (preview) {
+            preview.innerHTML = `
+                <div class="camera-placeholder">
+                    <span class="material-icons camera-icon">error_outline</span>
+                    <p class="camera-status-text">Stream nicht verfügbar</p>
+                </div>
+            `;
+        }
+    }
+
+    function openCameraFullscreen(cameraId) {
+        const modal = document.getElementById('camera-fullscreen-modal');
+        const video = document.getElementById('fullscreen-video');
+        const stream = cameraStreams[cameraId];
+
+        if (stream) {
+            loadHLSStream(video, stream.hls);
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeCameraFullscreen() {
+        const modal = document.getElementById('camera-fullscreen-modal');
+        const video = document.getElementById('fullscreen-video');
+
+        video.pause();
+        video.src = '';
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // ESC zum Schließen
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeCameraFullscreen();
+        }
+    });
+</script>
