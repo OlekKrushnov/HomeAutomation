@@ -7,7 +7,7 @@
  * und den alten Cache zu löschen.
  */
 
-const CACHE_VERSION = 2;  // <-- Bei jeder Änderung erhöhen!
+const CACHE_VERSION = 3;  // <-- Bei jeder Änderung erhöhen!
 const CACHE_NAME = `smart-home-v${CACHE_VERSION}`;
 
 const urlsToCache = [

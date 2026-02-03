@@ -4,89 +4,33 @@
 
 /**
  * Initialisiert und steuert den Splash Screen
- * Dauer: 4 Sekunden total (3s Anzeige + 1s Logo-Animation)
- * Das Logo fliegt von der Mitte zur Topbar und BLEIBT dort.
+ * Einfache Animation: Einblenden → 2 Sekunden anzeigen → Ausblenden → Home laden
  */
 function initSplashScreen() {
     const splashScreen = document.getElementById('splash-screen');
-    const splashLogo = document.getElementById('splash-logo');
-    const topbar = document.querySelector('.top-bar');
 
-    if (!splashScreen || !splashLogo) {
+    if (!splashScreen) {
         // Kein Splash Screen, direkt App starten
         document.body.classList.remove('app-loading');
         loadPage('home', document.querySelector('a[onclick*="home"]'));
         return;
     }
 
-    // Phase 1: Splash anzeigen (3 Sekunden warten)
+    // Nach 2 Sekunden: Splash ausblenden
     setTimeout(() => {
-        // Text ausblenden
-        const splashContent = document.querySelector('.splash-content');
-        if (splashContent) {
-            splashContent.querySelectorAll('p').forEach(p => {
-                p.style.opacity = '0';
-                p.style.transition = 'opacity 0.3s ease';
-            });
-        }
+        // Splash mit Fade-Out ausblenden
+        splashScreen.classList.add('hidden');
 
-        // Phase 2: Logo zur Topbar fliegen lassen
-        // Aktuelle Position des Logos ermitteln
-        const logoRect = splashLogo.getBoundingClientRect();
+        // App-Interaktion freigeben
+        document.body.classList.remove('app-loading');
 
-        // CSS Animation stoppen
-        splashLogo.style.animation = 'none';
+        // Home-Seite laden
+        loadPage('home', document.querySelector('a[onclick*="home"]'));
 
-        // Logo auf fixed setzen an seiner aktuellen Position
-        splashLogo.style.position = 'fixed';
-        splashLogo.style.left = logoRect.left + 'px';
-        splashLogo.style.top = logoRect.top + 'px';
-        splashLogo.style.width = logoRect.width + 'px';
-        splashLogo.style.height = 'auto';
-        splashLogo.style.margin = '0';
-        splashLogo.style.zIndex = '10001';
-
-        // Einen Frame warten, dann Animation starten
-        requestAnimationFrame(() => {
-            // Zielposition und Größe
-            const targetRight = 24;
-            const targetTop = 16;
-            const targetWidth = 80;
-
-            // Transition setzen und zum Ziel animieren
-            splashLogo.style.transition = 'all 2s cubic-bezier(0.4, 0, 0.2, 1)';
-            splashLogo.style.left = (window.innerWidth - targetRight - targetWidth) + 'px';
-            splashLogo.style.top = targetTop + 'px';
-            splashLogo.style.width = targetWidth + 'px';
-        });
-
-        // Phase 3: Nach Logo-Animation - Logo in Topbar einfügen und Splash entfernen
+        // Splash-Overlay nach Fade-Out komplett entfernen
         setTimeout(() => {
-            // Logo aus Splash entfernen und in Topbar einfügen
-            splashLogo.remove();
-
-            // Neues Logo-Element für Topbar erstellen (das animierte Logo bleibt visuell gleich)
-            const topbarLogo = document.createElement('img');
-            topbarLogo.src = 'images/sabo-logo.png';
-            topbarLogo.alt = 'SABO';
-            topbarLogo.className = 'topbar-logo';
-            topbar.appendChild(topbarLogo);
-
-            // Splash-Hintergrund ausblenden
-            splashScreen.classList.add('hidden');
-
-            // App-Interaktion freigeben
-            document.body.classList.remove('app-loading');
-
-            // Home-Seite laden
-            loadPage('home', document.querySelector('a[onclick*="home"]'));
-
-            // Splash-Overlay nach Transition komplett entfernen
-            setTimeout(() => {
-                splashScreen.remove();
-            }, 800);
-
-        }, 2000); // 2 Sekunden für Logo-Animation
+            splashScreen.remove();
+        }, 800); // Zeit für Fade-Out Animation
 
     }, 2000); // 2 Sekunden Splash-Anzeige
 }
