@@ -256,20 +256,33 @@ function renderRoomScenes(roomId) {
     const grid = document.getElementById('dynamic-controls');
     if (!grid) return;
 
-    const scenes = roomScenes[roomId] || [];
+    // Vordefinierte + User-Szenen kombinieren
+    const predefinedScenes = roomScenes[roomId] || [];
+    const userScenes = userRoomScenes[roomId] || [];
+    const allScenes = [...predefinedScenes, ...userScenes];
 
     grid.innerHTML = '';
 
-    if (scenes.length === 0) {
-        grid.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding:50px; color:#888;">
-                <p>Keine Szenen für diesen Raum definiert.</p>
-            </div>
-        `;
+    // "Neue Szene" Button als erste Karte
+    const addCard = document.createElement('div');
+    addCard.className = 'scene-card-glass scene-card-room add-scene-card fade-in';
+    addCard.onclick = () => openSceneEditor(roomId);
+    addCard.innerHTML = `
+        <div class="scene-card-bg"></div>
+        <div class="scene-card-content add-scene-content">
+            <span class="material-icons add-scene-icon">add</span>
+            <span class="add-scene-text">Neue Szene</span>
+        </div>
+    `;
+    grid.appendChild(addCard);
+
+    if (allScenes.length === 0) {
+        // Keine Szenen vorhanden (nur der Add-Button ist sichtbar)
         return;
     }
 
-    scenes.forEach(scene => {
+    allScenes.forEach(scene => {
+        const isUserScene = userScenes.includes(scene);
         const card = document.createElement('div');
         card.className = 'scene-card-glass scene-card-room fade-in';
         card.onclick = () => {
@@ -285,12 +298,397 @@ function renderRoomScenes(roomId) {
                     <span class="scene-icon-large">${scene.icon}</span>
                     <div class="scene-info">
                         <h3 class="scene-title">${scene.name}</h3>
-                        <p class="scene-desc">${scene.description}</p>
+                        <p class="scene-desc">${scene.description || ''}</p>
                     </div>
                 </div>
+                ${isUserScene ? `
+                    <button class="scene-delete-btn" onclick="event.stopPropagation(); deleteUserScene('${scene.id}', '${roomId}')">
+                        <span class="material-icons">delete</span>
+                    </button>
+                ` : ''}
             </div>
         `;
 
         grid.appendChild(card);
     });
 }
+
+// ============================================================================
+// USER SCENES - LocalStorage Persistenz
+// ============================================================================
+
+/**
+ * Benutzerdefinierte Szenen (werden aus LocalStorage geladen)
+ */
+let userGlobalScenes = [];
+let userRoomScenes = {};
+
+/**
+ * Lädt User-Szenen aus LocalStorage beim Start
+ */
+function loadUserScenes() {
+    try {
+        const globalData = localStorage.getItem('userGlobalScenes');
+        const roomData = localStorage.getItem('userRoomScenes');
+
+        if (globalData) userGlobalScenes = JSON.parse(globalData);
+        if (roomData) userRoomScenes = JSON.parse(roomData);
+    } catch (e) {
+        console.error('Fehler beim Laden der User-Szenen:', e);
+    }
+}
+
+/**
+ * Speichert User-Szenen in LocalStorage
+ */
+function saveUserScenes() {
+    try {
+        localStorage.setItem('userGlobalScenes', JSON.stringify(userGlobalScenes));
+        localStorage.setItem('userRoomScenes', JSON.stringify(userRoomScenes));
+    } catch (e) {
+        console.error('Fehler beim Speichern der User-Szenen:', e);
+    }
+}
+
+/**
+ * Fügt eine neue User-Szene hinzu
+ * @param {Object} scene - Das Szenen-Objekt
+ * @param {string|null} roomId - null = global, sonst Raum-ID
+ */
+function addUserScene(scene, roomId = null) {
+    scene.id = 'user_' + Date.now();
+
+    if (roomId) {
+        if (!userRoomScenes[roomId]) userRoomScenes[roomId] = [];
+        userRoomScenes[roomId].push(scene);
+    } else {
+        userGlobalScenes.push(scene);
+    }
+
+    saveUserScenes();
+}
+
+/**
+ * Löscht eine User-Szene
+ */
+function deleteUserScene(sceneId, roomId = null) {
+    if (roomId) {
+        if (userRoomScenes[roomId]) {
+            userRoomScenes[roomId] = userRoomScenes[roomId].filter(s => s.id !== sceneId);
+            saveUserScenes();
+            renderRoomScenes(roomId);
+        }
+    } else {
+        userGlobalScenes = userGlobalScenes.filter(s => s.id !== sceneId);
+        saveUserScenes();
+        renderSzenenPage();
+    }
+    showSceneToast('Szene gelöscht');
+}
+
+// User-Szenen beim Start laden
+loadUserScenes();
+
+// ============================================================================
+// SZENEN-SEITE (Globale Szenen)
+// ============================================================================
+
+/**
+ * Rendert die globale Szenen-Seite
+ */
+function renderSzenenPage() {
+    const container = document.getElementById('szenen-page-grid');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // "Neue Szene" Button
+    const addCard = document.createElement('div');
+    addCard.className = 'scene-card-glass add-scene-card fade-in';
+    addCard.onclick = () => openSceneEditor(null);
+    addCard.innerHTML = `
+        <div class="scene-card-bg"></div>
+        <div class="scene-card-content add-scene-content">
+            <span class="material-icons add-scene-icon">add</span>
+            <span class="add-scene-text">Neue Szene</span>
+        </div>
+    `;
+    container.appendChild(addCard);
+
+    // Vordefinierte Szenen
+    globalScenes.forEach(scene => {
+        container.appendChild(createGlobalSceneCard(scene, false));
+    });
+
+    // User-Szenen
+    userGlobalScenes.forEach(scene => {
+        container.appendChild(createGlobalSceneCard(scene, true));
+    });
+}
+
+/**
+ * Erstellt eine Szenen-Karte für die globale Seite
+ */
+function createGlobalSceneCard(scene, isUserScene) {
+    const card = document.createElement('div');
+    card.className = 'scene-card-glass fade-in';
+    card.onclick = () => executeScene(scene);
+
+    card.innerHTML = `
+        <div class="scene-card-bg"></div>
+        <div class="scene-card-content">
+            <span class="scene-icon">${scene.icon}</span>
+            <span class="scene-name">${scene.name}</span>
+            ${scene.description ? `<span class="scene-desc-small">${scene.description}</span>` : ''}
+            ${isUserScene ? `
+                <button class="scene-delete-btn" onclick="event.stopPropagation(); deleteUserScene('${scene.id}', null)">
+                    <span class="material-icons">delete</span>
+                </button>
+            ` : ''}
+        </div>
+    `;
+
+    return card;
+}
+
+// ============================================================================
+// SZENEN-EDITOR MODAL
+// ============================================================================
+
+let currentEditorRoomId = null;
+const availableIcons = ['🎬', '🌙', '💡', '🎉', '🌅', '🏠', '😴', '☀️', '🧘', '📖', '👨‍🍳', '💤', '🔆', '🌈'];
+
+/**
+ * Öffnet den Szenen-Editor
+ * @param {string|null} roomId - null = globale Szene
+ */
+function openSceneEditor(roomId = null) {
+    currentEditorRoomId = roomId;
+
+    // Verfügbare Geräte sammeln
+    let devices = [];
+    if (roomId) {
+        // Nur Geräte aus diesem Raum
+        const room = roomData[roomId];
+        if (room) {
+            devices = room.controls
+                .filter(d => ['light', 'dimmer', 'rgb'].includes(d.type))
+                .map(d => ({ ...d, roomId, roomTitle: room.title }));
+        }
+    } else {
+        // Alle Geräte aus allen Räumen (für globale Szenen)
+        Object.keys(roomData).forEach(rId => {
+            const room = roomData[rId];
+            room.controls
+                .filter(d => ['light', 'dimmer', 'rgb'].includes(d.type))
+                .forEach(d => {
+                    devices.push({ ...d, roomId: rId, roomTitle: room.title });
+                });
+        });
+    }
+
+    // Modal erstellen
+    const modal = document.createElement('div');
+    modal.className = 'scene-editor-modal';
+    modal.id = 'scene-editor-modal';
+    modal.onclick = (e) => { if (e.target === modal) closeSceneEditor(); };
+
+    modal.innerHTML = `
+        <div class="scene-editor-content">
+            <div class="scene-editor-header">
+                <h2>${roomId ? 'Raum-Szene erstellen' : 'Globale Szene erstellen'}</h2>
+                <button class="scene-editor-close" onclick="closeSceneEditor()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <div class="scene-editor-body">
+                <div class="editor-field">
+                    <label>Name</label>
+                    <input type="text" id="scene-name-input" placeholder="Meine Szene" maxlength="30">
+                </div>
+                
+                <div class="editor-field">
+                    <label>Icon</label>
+                    <div class="icon-selector" id="icon-selector">
+                        ${availableIcons.map((icon, i) => `
+                            <span class="icon-option ${i === 0 ? 'selected' : ''}" data-icon="${icon}" onclick="selectSceneIcon(this)">${icon}</span>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="editor-field">
+                    <label>Geräte auswählen</label>
+                    <div class="device-selector" id="device-selector">
+                        ${devices.map((d, i) => `
+                            <div class="device-selector-item" data-index="${i}">
+                                <label class="device-checkbox-label">
+                                    <input type="checkbox" class="device-checkbox" data-device="${d.name}" data-room="${d.roomId}" data-type="${d.type}"
+                                           onchange="toggleDeviceConfig(this)">
+                                    <span class="device-checkbox-icon">${d.icon}</span>
+                                    <span class="device-checkbox-name">${d.name}</span>
+                                    ${!roomId ? `<span class="device-checkbox-room">${d.roomTitle}</span>` : ''}
+                                </label>
+                                <div class="device-config hidden" id="config-${i}">
+                                    <div class="config-row">
+                                        <label>Status:</label>
+                                        <select class="config-status">
+                                            <option value="1">An</option>
+                                            <option value="0">Aus</option>
+                                        </select>
+                                    </div>
+                                    ${d.type === 'dimmer' || d.type === 'rgb' ? `
+                                        <div class="config-row">
+                                            <label>Helligkeit:</label>
+                                            <input type="range" min="0" max="255" value="128" class="config-dimmer">
+                                            <span class="config-dimmer-value">50%</span>
+                                        </div>
+                                    ` : ''}
+                                    ${d.type === 'rgb' ? `
+                                        <div class="config-row">
+                                            <label>Farbe:</label>
+                                            <input type="color" value="#ff6600" class="config-color">
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scene-editor-footer">
+                <button class="btn-cancel" onclick="closeSceneEditor()">Abbrechen</button>
+                <button class="btn-save" onclick="saveSceneFromEditor()">Szene speichern</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Dimmer Slider Event Listener
+    modal.querySelectorAll('.config-dimmer').forEach(slider => {
+        slider.oninput = () => {
+            const valueSpan = slider.nextElementSibling;
+            valueSpan.textContent = Math.round(slider.value / 255 * 100) + '%';
+        };
+    });
+
+    // Animation
+    requestAnimationFrame(() => modal.classList.add('show'));
+}
+
+/**
+ * Schließt den Szenen-Editor
+ */
+function closeSceneEditor() {
+    const modal = document.getElementById('scene-editor-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    }
+}
+
+/**
+ * Icon im Editor auswählen
+ */
+function selectSceneIcon(el) {
+    document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+/**
+ * Zeigt/versteckt Geräte-Konfiguration
+ */
+function toggleDeviceConfig(checkbox) {
+    const item = checkbox.closest('.device-selector-item');
+    const config = item.querySelector('.device-config');
+    config.classList.toggle('hidden', !checkbox.checked);
+}
+
+/**
+ * Speichert die Szene aus dem Editor
+ */
+function saveSceneFromEditor() {
+    const name = document.getElementById('scene-name-input').value.trim();
+    if (!name) {
+        showSceneToast('Bitte einen Namen eingeben');
+        return;
+    }
+
+    const selectedIcon = document.querySelector('.icon-option.selected');
+    const icon = selectedIcon ? selectedIcon.dataset.icon : '🎬';
+
+    const actions = [];
+    document.querySelectorAll('.device-checkbox:checked').forEach(checkbox => {
+        const item = checkbox.closest('.device-selector-item');
+        const deviceName = checkbox.dataset.device;
+        const roomId = checkbox.dataset.room;
+        const deviceType = checkbox.dataset.type;
+
+        const statusSelect = item.querySelector('.config-status');
+        const status = parseInt(statusSelect.value);
+
+        // Status-Aktion
+        if (currentEditorRoomId) {
+            actions.push({ device: deviceName, property: 'status', value: status });
+        } else {
+            actions.push({ room: roomId, device: deviceName, property: 'status', value: status });
+        }
+
+        // Dimmer-Aktion
+        const dimmerSlider = item.querySelector('.config-dimmer');
+        if (dimmerSlider) {
+            const dimValue = parseInt(dimmerSlider.value);
+            if (currentEditorRoomId) {
+                actions.push({ device: deviceName, property: 'dimmer', value: dimValue });
+            } else {
+                actions.push({ room: roomId, device: deviceName, property: 'dimmer', value: dimValue });
+            }
+        }
+
+        // RGB-Aktion
+        const colorInput = item.querySelector('.config-color');
+        if (colorInput && deviceType === 'rgb') {
+            const hex = colorInput.value;
+            const r = parseInt(hex.substr(1, 2), 16);
+            const g = parseInt(hex.substr(3, 2), 16);
+            const b = parseInt(hex.substr(5, 2), 16);
+
+            if (currentEditorRoomId) {
+                actions.push({ device: deviceName, property: 'r', value: r });
+                actions.push({ device: deviceName, property: 'g', value: g });
+                actions.push({ device: deviceName, property: 'b', value: b });
+            } else {
+                actions.push({ room: roomId, device: deviceName, property: 'r', value: r });
+                actions.push({ room: roomId, device: deviceName, property: 'g', value: g });
+                actions.push({ room: roomId, device: deviceName, property: 'b', value: b });
+            }
+        }
+    });
+
+    if (actions.length === 0) {
+        showSceneToast('Bitte mindestens ein Gerät auswählen');
+        return;
+    }
+
+    const scene = {
+        name,
+        icon,
+        description: '',
+        actions
+    };
+
+    addUserScene(scene, currentEditorRoomId);
+    closeSceneEditor();
+
+    // UI aktualisieren
+    if (currentEditorRoomId) {
+        renderRoomScenes(currentEditorRoomId);
+    } else {
+        renderSzenenPage();
+    }
+
+    showSceneToast('Szene erstellt');
+}
+

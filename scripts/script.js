@@ -10,7 +10,7 @@ async function loadPage(pageName, element = null) {
     const headerTitle = document.getElementById('fix-header-title');
     const bottomBar = document.getElementById('room-bottom-bar');
 
-    const pageTitles = { 'home': 'Smart Home', 'raeume': 'Meine Räume', 'sensorik': 'Sensorik', 'cameras': 'Kameras' };
+    const pageTitles = { 'home': 'Smart Home', 'raeume': 'Meine Räume', 'szenen': 'Meine Szenen', 'sensorik': 'Sensorik', 'cameras': 'Kameras' };
 
     // WICHTIG: Event Listener vom Temperatur-Slider aufräumen wenn man die Seite verlässt
     if (typeof cleanupSliderListeners === 'function') {
@@ -41,6 +41,9 @@ async function loadPage(pageName, element = null) {
         }
         if (pageName === 'sensorik') {
             renderSensorikPage();
+        }
+        if (pageName === 'szenen') {
+            renderSzenenPage();
         }
 
         if (headerTitle && pageTitles[pageName]) headerTitle.innerText = pageTitles[pageName];
