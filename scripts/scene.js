@@ -263,24 +263,6 @@ function renderRoomScenes(roomId) {
 
     grid.innerHTML = '';
 
-    // "Neue Szene" Button als erste Karte
-    const addCard = document.createElement('div');
-    addCard.className = 'scene-card-glass scene-card-room add-scene-card fade-in';
-    addCard.onclick = () => openSceneEditor(roomId);
-    addCard.innerHTML = `
-        <div class="scene-card-bg"></div>
-        <div class="scene-card-content add-scene-content">
-            <span class="material-icons add-scene-icon">add</span>
-            <span class="add-scene-text">Neue Szene</span>
-        </div>
-    `;
-    grid.appendChild(addCard);
-
-    if (allScenes.length === 0) {
-        // Keine Szenen vorhanden (nur der Add-Button ist sichtbar)
-        return;
-    }
-
     allScenes.forEach(scene => {
         const isUserScene = userScenes.includes(scene);
         const card = document.createElement('div');
@@ -311,6 +293,19 @@ function renderRoomScenes(roomId) {
 
         grid.appendChild(card);
     });
+
+    // "Neue Szene" Button am Ende
+    const addCard = document.createElement('div');
+    addCard.className = 'scene-card-glass scene-card-room add-scene-card fade-in';
+    addCard.onclick = () => openSceneEditor(roomId);
+    addCard.innerHTML = `
+        <div class="scene-card-bg"></div>
+        <div class="scene-card-content add-scene-content">
+            <span class="material-icons add-scene-icon">add</span>
+            <span class="add-scene-text">Neue Szene</span>
+        </div>
+    `;
+    grid.appendChild(addCard);
 }
 
 // ============================================================================
@@ -402,7 +397,17 @@ function renderSzenenPage() {
 
     container.innerHTML = '';
 
-    // "Neue Szene" Button
+    // Vordefinierte Szenen
+    globalScenes.forEach(scene => {
+        container.appendChild(createGlobalSceneCard(scene, false));
+    });
+
+    // User-Szenen
+    userGlobalScenes.forEach(scene => {
+        container.appendChild(createGlobalSceneCard(scene, true));
+    });
+
+    // "Neue Szene" Button am Ende
     const addCard = document.createElement('div');
     addCard.className = 'scene-card-glass add-scene-card fade-in';
     addCard.onclick = () => openSceneEditor(null);
@@ -414,16 +419,6 @@ function renderSzenenPage() {
         </div>
     `;
     container.appendChild(addCard);
-
-    // Vordefinierte Szenen
-    globalScenes.forEach(scene => {
-        container.appendChild(createGlobalSceneCard(scene, false));
-    });
-
-    // User-Szenen
-    userGlobalScenes.forEach(scene => {
-        container.appendChild(createGlobalSceneCard(scene, true));
-    });
 }
 
 /**
