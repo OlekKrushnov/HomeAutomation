@@ -37,23 +37,31 @@ function initSplashScreen() {
         // Phase 2: Logo zur Topbar fliegen lassen
         // Aktuelle Position des Logos ermitteln
         const logoRect = splashLogo.getBoundingClientRect();
-        const logoStartX = logoRect.left + logoRect.width / 2;
-        const logoStartY = logoRect.top + logoRect.height / 2;
 
-        // Zielposition (Topbar rechts oben)
-        const targetX = window.innerWidth - 60; // 60px vom rechten Rand
-        const targetY = 32; // Mitte der Topbar
+        // CSS Animation stoppen und Position fixieren
+        splashLogo.style.animation = 'none';
 
-        // Verschiebung berechnen
-        const deltaX = targetX - logoStartX;
-        const deltaY = targetY - logoStartY;
+        // Logo auf fixed setzen an seiner aktuellen Position
+        splashLogo.style.position = 'fixed';
+        splashLogo.style.left = logoRect.left + 'px';
+        splashLogo.style.top = logoRect.top + 'px';
+        splashLogo.style.width = logoRect.width + 'px';
+        splashLogo.style.margin = '0';
+        splashLogo.style.zIndex = '10001';
 
-        // Skalierung (200px -> 80px = 0.4)
-        const scale = 0.4;
+        // Einen Frame warten, dann Animation starten
+        requestAnimationFrame(() => {
+            // Zielposition und Größe
+            const targetRight = 24;
+            const targetTop = 16;
+            const targetWidth = 80;
 
-        // Animation anwenden
-        splashLogo.style.transition = 'transform 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease 0.9s';
-        splashLogo.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
+            // Transition setzen und zum Ziel animieren
+            splashLogo.style.transition = 'left 1s cubic-bezier(0.4, 0, 0.2, 1), top 1s cubic-bezier(0.4, 0, 0.2, 1), width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+            splashLogo.style.left = (window.innerWidth - targetRight - targetWidth) + 'px';
+            splashLogo.style.top = targetTop + 'px';
+            splashLogo.style.width = targetWidth + 'px';
+        });
 
         // Phase 3: Nach Logo-Animation - Splash ausblenden und App freigeben
         setTimeout(() => {
