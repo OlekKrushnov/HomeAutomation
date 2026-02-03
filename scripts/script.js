@@ -18,9 +18,9 @@ function initSplashScreen() {
         return;
     }
 
-    // Topbar-Logo initial verstecken
+    // Topbar-Logo initial verstecken (wird nach Splash-Animation sichtbar)
     if (topbarLogo) {
-        topbarLogo.style.opacity = '0';
+        topbarLogo.style.visibility = 'hidden';
     }
 
     // Phase 1: Splash anzeigen (3 Sekunden warten)
@@ -68,9 +68,9 @@ function initSplashScreen() {
             // Splash-Logo ausblenden
             splashLogo.style.opacity = '0';
 
-            // Topbar-Logo einblenden
+            // Topbar-Logo sichtbar machen (sofort, keine Animation)
             if (topbarLogo) {
-                topbarLogo.style.opacity = '1';
+                topbarLogo.style.visibility = 'visible';
             }
 
             // Splash ausblenden

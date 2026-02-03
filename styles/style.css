@@ -160,13 +160,11 @@ body.app-loading .topbar-logo {
     }
 }
 
-/* Topbar Logo (nach Animation) */
+/* Topbar Logo (statisch, keine Animation) */
 .topbar-logo {
     height: 32px;
     width: auto;
     margin-left: auto;
-    opacity: 1;
-    transition: opacity 0.3s ease;
     filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.1));
 }
 
