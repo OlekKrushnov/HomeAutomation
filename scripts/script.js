@@ -24,8 +24,11 @@ function initSplashScreen() {
         // App-Interaktion freigeben
         document.body.classList.remove('app-loading');
 
-        // Home-Seite laden
-        loadPage('home', document.querySelector('a[onclick*="home"]'));
+        // Home-Seite laden und Menu-Item aktivieren
+        loadPage('home').then(() => {
+            const homeLink = document.querySelector('#side-menu ul li a');
+            if (homeLink) homeLink.classList.add('active');
+        });
 
         // Splash-Overlay nach Fade-Out komplett entfernen
         setTimeout(() => {
@@ -146,13 +149,7 @@ function updateGreeting() {
 document.addEventListener('DOMContentLoaded', () => {
     // Lade gespeicherte Dark Mode Präferenz
     loadThemePreference();
-
-    setTimeout(() => {
-        loadPage('home').then(() => {
-            const homeLink = document.querySelector('#side-menu ul li a');
-            if (homeLink) homeLink.classList.add('active');
-        });
-    }, 100);
+    // Home-Seite wird vom Splash Screen geladen (initSplashScreen)
 });
 
 /**
