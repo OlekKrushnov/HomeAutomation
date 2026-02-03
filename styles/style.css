@@ -1304,6 +1304,105 @@ body.dark-theme .sensor-card-bg {
 }
 
 /* ========================================
+   MODE TOGGLE (Hand-0-Auto)
+   ======================================== */
+.mode-control {
+    margin-bottom: 16px;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 0;
+    background: var(--bg-primary);
+    border-radius: 14px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.mode-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.mode-btn .material-icons {
+    font-size: 22px;
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+/* Hand Mode - Grün */
+.mode-btn[data-mode="hand"].active {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.15) 100%);
+    color: #2ecc71;
+}
+
+.mode-btn[data-mode="hand"].active .material-icons {
+    color: #2ecc71;
+}
+
+/* Off Mode - Rot */
+.mode-btn[data-mode="off"].active {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.15) 100%);
+    color: #e74c3c;
+}
+
+.mode-btn[data-mode="off"].active .material-icons {
+    color: #e74c3c;
+}
+
+/* Auto Mode - Blau */
+.mode-btn[data-mode="auto"].active {
+    background: linear-gradient(135deg, rgba(0, 180, 216, 0.2) 0%, rgba(0, 150, 199, 0.15) 100%);
+    color: var(--accent-primary);
+}
+
+.mode-btn[data-mode="auto"].active .material-icons {
+    color: var(--accent-primary);
+    animation: autoRotate 3s linear infinite;
+}
+
+@keyframes autoRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Card Mode States */
+.sensor-card-glass.mode-hand .sensor-card-bg {
+    border-color: rgba(46, 204, 113, 0.3);
+}
+
+.sensor-card-glass.mode-off .sensor-card-bg {
+    border-color: rgba(231, 76, 60, 0.3);
+    opacity: 0.7;
+}
+
+.sensor-card-glass.mode-auto .sensor-card-bg {
+    border-color: rgba(0, 180, 216, 0.3);
+}
+
+/* ========================================
    HAPTIC SWITCH ANIMATIONS
    ======================================== */
 @keyframes hapticPulse {

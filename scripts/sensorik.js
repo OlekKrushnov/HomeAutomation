@@ -17,6 +17,7 @@ const sensorConfig = {
             name: 'Flur Licht',
             room: 'Flur',
             icon: '⏱️',
+            mode: 'auto', // 'hand' | 'off' | 'auto'
             duration: 180, // Sekunden
             minDuration: 30,
             maxDuration: 600
@@ -26,6 +27,7 @@ const sensorConfig = {
             name: 'Eingang',
             room: 'Eingang',
             icon: '⏱️',
+            mode: 'auto',
             duration: 120,
             minDuration: 30,
             maxDuration: 600
@@ -35,6 +37,7 @@ const sensorConfig = {
             name: 'Garage',
             room: 'Garage',
             icon: '⏱️',
+            mode: 'auto',
             duration: 300,
             minDuration: 60,
             maxDuration: 900
@@ -46,6 +49,7 @@ const sensorConfig = {
             name: 'Wohnzimmer',
             room: 'wohnzimmer',
             icon: '👁️',
+            mode: 'auto', // 'hand' | 'off' | 'auto'
             timeout: 300,      // Sekunden bis Ausschalten
             luxThreshold: 200, // Lux-Schwellwert (unter diesem Wert aktiv)
             minTimeout: 60,
@@ -58,6 +62,7 @@ const sensorConfig = {
             name: 'Flur',
             room: 'Flur',
             icon: '👁️',
+            mode: 'auto',
             timeout: 180,
             luxThreshold: 100,
             minTimeout: 60,
@@ -70,6 +75,7 @@ const sensorConfig = {
             name: 'Bad',
             room: 'bad',
             icon: '👁️',
+            mode: 'auto',
             timeout: 600,
             luxThreshold: 150,
             minTimeout: 120,
@@ -143,6 +149,34 @@ function renderMotionSensors() {
 function createSensorCard(sensor, type) {
     const card = document.createElement('div');
     card.className = 'sensor-card-glass fade-in';
+    card.id = `card-${sensor.id}`;
+
+    // Hand-0-Auto Toggle HTML
+    const toggleHTML = `
+        <div class="sensor-control mode-control">
+            <label class="sensor-label">Betriebsart</label>
+            <div class="mode-toggle" id="toggle-${sensor.id}">
+                <button class="mode-btn ${sensor.mode === 'hand' ? 'active' : ''}" 
+                        data-mode="hand" 
+                        onclick="setSensorMode('${sensor.id}', 'hand', '${type}')">
+                    <span class="material-icons">pan_tool</span>
+                    <span>Hand</span>
+                </button>
+                <button class="mode-btn ${sensor.mode === 'off' ? 'active' : ''}" 
+                        data-mode="off" 
+                        onclick="setSensorMode('${sensor.id}', 'off', '${type}')">
+                    <span class="material-icons">power_settings_new</span>
+                    <span>0</span>
+                </button>
+                <button class="mode-btn ${sensor.mode === 'auto' ? 'active' : ''}" 
+                        data-mode="auto" 
+                        onclick="setSensorMode('${sensor.id}', 'auto', '${type}')">
+                    <span class="material-icons">autorenew</span>
+                    <span>Auto</span>
+                </button>
+            </div>
+        </div>
+    `;
 
     if (type === 'minuterie') {
         card.innerHTML = `
@@ -155,6 +189,7 @@ function createSensorCard(sensor, type) {
                         <span class="sensor-room">${sensor.room}</span>
                     </div>
                 </div>
+                ${toggleHTML}
                 <div class="sensor-control">
                     <label class="sensor-label">Nachlaufzeit</label>
                     <div class="sensor-slider-container">
@@ -180,6 +215,7 @@ function createSensorCard(sensor, type) {
                         <span class="sensor-room">${sensor.room}</span>
                     </div>
                 </div>
+                ${toggleHTML}
                 <div class="sensor-control">
                     <label class="sensor-label">Nachlaufzeit</label>
                     <div class="sensor-slider-container">
@@ -255,4 +291,49 @@ function updateMotionLux(sensorId, slider) {
         sensor.luxThreshold = value;
         document.getElementById(`lux-${sensorId}`).textContent = `${value} Lux`;
     }
+}
+
+/**
+ * Setzt den Betriebsmodus (Hand/0/Auto) für einen Sensor
+ * @param {string} sensorId - ID des Sensors
+ * @param {string} mode - 'hand' | 'off' | 'auto'
+ * @param {string} type - 'minuterie' | 'motion'
+ */
+function setSensorMode(sensorId, mode, type) {
+    // Sensor finden und Mode setzen
+    let sensor;
+    if (type === 'minuterie') {
+        sensor = sensorConfig.minuterien.find(s => s.id === sensorId);
+    } else {
+        sensor = sensorConfig.motionSensors.find(s => s.id === sensorId);
+    }
+
+    if (!sensor) return;
+
+    sensor.mode = mode;
+
+    // UI aktualisieren
+    const toggle = document.getElementById(`toggle-${sensorId}`);
+    if (toggle) {
+        toggle.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    // Karten-Styling basierend auf Mode
+    const card = document.getElementById(`card-${sensorId}`);
+    if (card) {
+        card.classList.remove('mode-hand', 'mode-off', 'mode-auto');
+        card.classList.add(`mode-${mode}`);
+    }
+
+    // Später: SPS-Kommunikation
+    if (typeof SPS !== 'undefined' && API_CONFIG.USE_API) {
+        // Beispiel: SPS.write(`GVL.${sensorId}_mode`, mode === 'hand' ? 1 : mode === 'off' ? 0 : 2);
+    }
+
+    console.log(`Sensor ${sensorId} Mode: ${mode}`);
 }
