@@ -1049,6 +1049,78 @@ body.dark-theme .camera-card-bg {
     background: #000;
 }
 
+/* Snapshot Image */
+.camera-snapshot {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.camera-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.camera-loading .material-icons {
+    font-size: 48px;
+}
+
+.rotating {
+    animation: rotate 1.5s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.camera-status.connecting {
+    background: rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+}
+
+/* Fullscreen Image Modal */
+.fullscreen-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #000;
+}
+
+.modal-controls {
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.modal-timestamp {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
 .camera-note {
     margin-top: 24px;
     padding: 16px 20px;
